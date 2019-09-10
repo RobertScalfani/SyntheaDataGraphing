@@ -1,8 +1,18 @@
 import java.awt.Color;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import javax.swing.JFrame;
 
+import de.erichseifert.gral.data.DataSource;
 import de.erichseifert.gral.data.DataTable;
+import de.erichseifert.gral.data.Row;
+import de.erichseifert.gral.io.data.DataReader;
+import de.erichseifert.gral.io.data.DataReaderFactory;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.plots.lines.DefaultLineRenderer2D;
 import de.erichseifert.gral.plots.lines.LineRenderer;
@@ -14,30 +24,22 @@ public class LinePlot extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(800, 600);
 		
-		// Extract Data Here
-		DataTable data1 = new DataTable(Double.class, Double.class);
-		for (double x = -5.0; x <= 5.0; x+=0.25) {
-		    double y = 5.0*Math.sin(x);
-		    data1.add(x, y);
-		}
 		
-		DataTable data2 = new DataTable(Double.class, Double.class);
-		for (double x = 5.0; x >= 0.0; x-=0.25) {
-		    data2.add(x, x);
-		}
+		DataTable[] fullList = importCSV("C:\\Users\\robis\\OneDrive\\Documents\\payer_transitions.csv");
+		
 		
 		// Insert Data into plot here
-		XYPlot plot = new XYPlot(data2, data1);
+		XYPlot plot = new XYPlot(fullList);
+		
+		Random r = new Random();
 		
 		// Render and clean up plots here
 		LineRenderer lines = new DefaultLineRenderer2D();
-		plot.setLineRenderers(data1, lines);
-		plot.setLineRenderers(data2, lines);
-		Color color = new Color(0.0f, 0.3f, 1.0f);
-		plot.getPointRenderers(data1).get(0).setColor(color);
-		plot.getLineRenderers(data1).get(0).setColor(color);
-		plot.getPointRenderers(data2).get(0).setColor(color);
-		plot.getLineRenderers(data2).get(0).setColor(color);
+		for(DataTable dt : fullList) {
+			Color color = new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
+			plot.getPointRenderers(dt).get(0).setColor(color);
+			plot.setLineRenderers(dt, lines);
+		}
 		
 		// Display Graph
 		getContentPane().add(new InteractivePanel(plot));
@@ -46,5 +48,63 @@ public class LinePlot extends JFrame {
 	public static void main(String[] args) {
 		LinePlot frame = new LinePlot();
 		frame.setVisible(true);
+	}
+	
+	public DataTable[] importCSV(String fileName) {
+		
+		// Each data table in the list corresponds to one patient's age and QOL data.
+		DataTable[] data = null;
+		
+		DataReaderFactory factory = DataReaderFactory.getInstance();
+		DataReader reader = factory.get("text/csv");
+		try {
+			
+			// Imports PATIENT_ID, AGE, QOLS
+			DataSource ds = reader.read(new FileInputStream(fileName), String.class, Integer.class, Double.class);
+			
+			data = new DataTable[1];
+			
+			String prevPatientID = (String) ds.get(0,0);
+			int row = 0;
+			int numPatients = 0;
+			
+			// Loop through all rows in the csv.
+			while(numPatients < 1) {
+				
+				
+				DataTable currentDataTable = new DataTable(Integer.class, Double.class);
+				//currentDataTable.setName(prevPatientID);
+				
+				// Loop to fill current data table until patient ID changes.
+				while(true) {
+					
+					// Get the current Row.
+					Row currentRow = ds.getRow(row);
+					
+					if (!prevPatientID.equals(currentRow.get(0))) {
+						prevPatientID = (String) currentRow.get(0);
+						break;
+					}
+					
+					// Add the current row's Age and QOLS to the current data table.
+					currentDataTable.add(currentRow.get(1), currentRow.get(2));
+					
+					row++;
+				}
+				// Add current data table to list of data tables.	
+				data[numPatients] = (currentDataTable);
+				numPatients++;
+
+				
+
+			}
+						
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return data;
 	}
 }
