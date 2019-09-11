@@ -20,12 +20,12 @@ import de.erichseifert.gral.ui.InteractivePanel;
 
 public class LinePlot extends JFrame {
 
-	public LinePlot() {
+	public LinePlot(String fileName) {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(800, 600);
 		
 		
-		DataTable[] fullList = importCSV("C:\\Users\\robis\\OneDrive\\Documents\\payer_transitions.csv");
+		DataTable[] fullList = importCSV(fileName);
 		
 		
 		// Insert Data into plot here
@@ -46,8 +46,14 @@ public class LinePlot extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		LinePlot frame = new LinePlot();
-		frame.setVisible(true);
+		LinePlot allFrame = new LinePlot("C:\\Users\\robis\\OneDrive\\Documents\\payer_transitions_ALL.csv");
+		allFrame.setVisible(true);
+		
+		LinePlot midFrame = new LinePlot("C:\\Users\\robis\\OneDrive\\Documents\\payer_transitions_MID.csv");
+		midFrame.setVisible(true);
+		
+		LinePlot noFrame = new LinePlot("C:\\Users\\robis\\OneDrive\\Documents\\payer_transitions_NONE.csv");
+		noFrame.setVisible(true);
 	}
 	
 	public DataTable[] importCSV(String fileName) {
@@ -62,14 +68,14 @@ public class LinePlot extends JFrame {
 			// Imports PATIENT_ID, AGE, QOLS
 			DataSource ds = reader.read(new FileInputStream(fileName), String.class, Integer.class, Double.class);
 			
-			data = new DataTable[1];
+			data = new DataTable[99];
 			
 			String prevPatientID = (String) ds.get(0,0);
 			int row = 0;
 			int numPatients = 0;
 			
 			// Loop through all rows in the csv.
-			while(numPatients < 1) {
+			while(numPatients < 99) {
 				
 				
 				DataTable currentDataTable = new DataTable(Integer.class, Double.class);
@@ -94,8 +100,6 @@ public class LinePlot extends JFrame {
 				// Add current data table to list of data tables.	
 				data[numPatients] = (currentDataTable);
 				numPatients++;
-
-				
 
 			}
 						
